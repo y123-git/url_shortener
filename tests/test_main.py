@@ -1,0 +1,24 @@
+"""
+Main Tests
+"""
+
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_health():
+    """Test health endpoint."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+
+def test_root():
+    """Test root endpoint."""
+    response = client.get("/")
+    assert response.status_code == 200
+    data = response.json()
+    assert "service" in data
+    assert data["service"] == "URL Shortener API"

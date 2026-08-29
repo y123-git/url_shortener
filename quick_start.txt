@@ -1,0 +1,28 @@
+
+---
+
+## 🚀 How to Run
+
+### Quick Start:
+
+```bash
+# Clone or create the project
+mkdir url-shortener
+cd url-shortener
+
+# Create all files above
+
+# Install dependencies
+pip install -r requirements.txt
+
+#Run
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+# Or run locally
+uvicorn app.main:app --reload
+
+# Or Run with Docker 
+docker-compose up -d
+
+# Test it
+curl http://localhost:8000/health
+curl -X POST http://localhost:8000/shorten -H "Content-Type: application/json" -d '{"original_url":"https://example.com"}'

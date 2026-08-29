@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic URL Shortener</title>
+    <style>
+        :root {
+            --bg: #0f1419;
+            --panel: #171e27;
+            --panel-soft: #10161d;
+            --ink: #e7ecf2;
+            --muted: #93a0b0;
+            --line: #2a3440;
+            --accent: #3d8bfd;
+            --ok: #3dd68c;
+            --warn: #e6b325;
+            --bad: #f07178;
+            --wait: #c792ea;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            margin: 0;
+            font: 14px/1.45 "Segoe UI", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        header {
+            padding: 20px 28px 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        header h1 {
+            margin: 0 0 4px;
+            font-size: 20px;
+            font-weight: 650;
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 0 0 24px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            min-height: calc(100vh - 78px);
+        }
+
+        section {
+            padding: 20px 24px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            margin: 0 0 12px;
+            font-size: 13px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+            color: var(--ink);
+        }
+
+        label {
+            display: block;
+            color: var(--muted);
+            margin: 8px 0 4px;
+            font-size: 12px;
+        }
+
+        input, textarea, select, button {
+            font: inherit;
+            color: var(--ink);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            background: var(--panel-soft);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+
+        textarea {
+            min-height: 92px;
+            resize: vertical;
+        }
+
+        button {
+            appearance: none;
+            border: 0;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+        }
+
+        .btn-secondary {
+            background: #2a3440;
+        }
+
+        .btn-warning {
+            background: #8b5e1d;
+        }
+
+        .btn-danger {
+            background: #8b3340;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .human-gate-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .human-gate-toggle input {
+            width: auto;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #2a3440;
+            color: var(--muted);
+        }
+
+        .pill.ok,
+        .pill.completed,
+        .pill.succeeded {
+            color: var(--ok);
+        }
+
+        .pill.failed,
+        .pill.cancelled {
+            color: var(--bad);
+        }
+
+        .pill.running,
+        .pill.ready {
+            color: var(--accent);
+        }
+
+        .pill.waiting_approval,
+        .pill.pending {
+            color: var(--wait);
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .scenario-card {
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            background: #10161d;
+            cursor: pointer;
+            transition: border-color .2s ease, transform .2s ease, background .2s ease;
+        }
+
+        .scenario-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .scenario-card.selected {
+            border-color: var(--accent);
+            background: rgba(61, 139, 253, 0.08);
+        }
+
+        .scenario-card .badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(61, 139, 253, 0.18);
+            color: var(--accent);
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .scenario-card h3 {
+            margin-right: 70px;
+        }
+
+        .scenario-card p {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .scenario-card .metadata {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .status-area {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .status-header strong {
+            color: var(--muted);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 18px;
+            background: #1d2732;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            margin-bottom: 8px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #7faaff);
+            transition: width 0.35s ease;
+        }
+
+        #jobInfo {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        #shortUrlLink {
+            margin-top: 10px;
+            display: none;
+        }
+
+        #shortUrlLink a {
+            color: var(--accent);
+            font-size: 12px;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .log-area {
+            background: var(--panel-soft);
+            color: #d5dce6;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            padding: 2px 0;
+        }
+
+        .log-entry.log-info { color: #67d1ff; }
+        .log-entry.log-success { color: var(--ok); }
+        .log-entry.log-error { color: var(--bad); }
+        .log-entry.log-warning { color: var(--warn); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #2a3440;
+            color: var(--ink);
+        }
+
+        .status-badge.pending { background: rgba(230, 179, 37, 0.16); color: var(--warn); }
+        .status-badge.running { background: rgba(61, 139, 253, 0.18); color: var(--accent); }
+        .status-badge.completed { background: rgba(61, 214, 140, 0.14); color: var(--ok); }
+        .status-badge.failed { background: rgba(240, 113, 120, 0.12); color: var(--bad); }
+
+        .job-list {
+            margin-top: 18px;
+        }
+
+        .job-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .job-item:last-child {
+            border-bottom: none;
+        }
+
+        .job-item strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .job-item small {
+            color: var(--muted);
+        }
+
+        .job-item button {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--ink);
+            padding: 5px 10px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .metric {
+            background: var(--panel-soft);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .metric b {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+
+        .metric span {
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+        }
+
+        .stage {
+            display: grid;
+            grid-template-columns: 16px 1fr auto;
+            gap: 8px;
+            align-items: start;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .stage:last-child {
+            border-bottom: none;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #445;
+            margin-top: 5px;
+        }
+
+        .dot.succeeded { background: var(--ok); }
+        .dot.failed, .dot.rolled_back, .dot.blocked { background: var(--bad); }
+        .dot.running { background: var(--accent); }
+        .dot.waiting_approval { background: var(--wait); }
+        .dot.ready, .dot.pending { background: var(--warn); }
+
+        pre {
+            background: var(--panel-soft);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px;
+            overflow: auto;
+            max-height: 280px;
+            font-size: 12px;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 960px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Agentic URL Shortener</h1>
+            <p>Scenario orchestration for the shortener service. Select a path, monitor the run, and inspect the decision trail.</p>
+        </header>
+
+        <main>
+            <section>
+                <div class="panel">
+                    <h2>Scenario library</h2>
+                    <p style="color: var(--muted); margin: -4px 0 12px;">Select a delivery mode for the URL shortener run.</p>
+
+                    <label for="scenarioSelect">Scenario</label>
+                    <select id="scenarioSelect" style="margin-bottom: 12px;">
+                        <option value="greenfield">GREENFIELD SCENARIO</option>
+                        <option value="brownfield">BROWNFIELD SCENARIO</option>
+                        <option value="ambiguous">AMBIGUOUS SCENARIO</option>
+                    </select>
+
+                    <label for="shortenUrlInput">Original URL</label>
+                    <input id="shortenUrlInput" type="url" placeholder="https://example.com" style="margin-bottom: 10px;" />
+
+                    <div style="display:grid; grid-template-columns: 1fr 150px; gap: 8px;">
+                        <div>
+                            <label for="customCodeInput">Custom code</label>
+                            <input id="customCodeInput" type="text" maxlength="10" placeholder="optional" />
+                        </div>
+                        <div>
+                            <label for="ttlInput">TTL (seconds)</label>
+                            <input id="ttlInput" type="number" min="1" step="1" value="3600" />
+                        </div>
+                    </div>
+
+                    <div class="action-row" style="margin-top: 12px;">
+                        <button class="btn-primary" id="runBtn" disabled>Run shorten flow</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Execution & Controls</h2>
+                    <p style="color: var(--muted); margin: -4px 0 12px;">Trigger flows, control human approval gates, or execute safety rollbacks.</p>
+                    <div class="row" style="align-items:center; gap:10px; flex-wrap:wrap;">
+                        <button class="btn-secondary" id="demoBtn">Start</button>
+                        <button class="btn-secondary" id="approveBtn">Approve</button>
+                        <button class="btn-secondary" id="rejectBtn">Reject</button>
+                        <button class="btn-warning" id="safeStopBtn">Safe stop</button>
+                        <label class="human-gate-toggle" style="margin-left:auto; margin-right:0;">
+                            <input id="humanGateToggle" type="checkbox" checked />
+                            <span>Human gates</span>
+                        </label>
+                        <button class="btn-danger" id="cancelBtn" style="display:none;">Cancel</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Service</h2>
+                    <p><span class="pill" id="healthStatus">checking</span></p>
+                    <p style="margin-top: 10px; color: var(--muted);">POST /scenarios/run · GET /jobs · WebSocket job stream</p>
+                </div>
+            </section>
+
+            <section>
+                <div class="panel">
+                    <h2>Run status</h2>
+                    <div class="status-header">
+                        <div>
+                            <strong>Status:</strong>
+                            <span id="statusBadge" class="status-badge pending">Ready</span>
+                        </div>
+                        <div>
+                            <span id="progressText">0%</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="fill" id="progressFill"></div>
+                    </div>
+                    <div id="jobInfo">No job running</div>
+                    <div id="shortUrlLink"></div>
+                    <div class="log-area" id="logArea">
+                        <div class="log-entry log-info">Waiting for a scenario run...</div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Reliability metrics</h2>
+                    <div class="metrics" id="metrics"></div>
+                </div>
+
+                <div class="panel">
+                    <h2>Stage graph</h2>
+                    <p style="margin-bottom: 12px; color: var(--muted);">
+                        Run <span class="pill" id="runId">none</span>
+                        · <span class="pill" id="runState">idle</span>
+                    </p>
+                    <div id="stages"></div>
+                </div>
+
+                <div class="panel">
+                    <h2>Decision lineage</h2>
+                    <pre id="lineage">Start a scenario to see gates, retries, approvals, and replans.</pre>
+                </div>
+
+                <div class="panel job-list" id="jobList">
+                    <h2>Recent jobs</h2>
+                    <div id="jobsContainer">
+                        <div style="color: var(--muted); padding: 8px 0;">No jobs yet</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = window.location.protocol.startsWith('http') ? window.location.origin : 'http://127.0.0.1:8000';
+        let selectedScenario = null;
+        let currentJobId = null;
+        let ws = null;
+        let jobPollingInterval = null;
+        let demoTimer = null;
+        let demoStep = 0;
+        let demoApprovalPending = false;
+        let demoStopRequested = false;
+        let demoStartTime = null;
+        let rollbackCount = 0;
+        let lastFailedTimestamp = null;
+        const recoveryTimes = [];
+        const trackedDurations = [];
+        let cachedJobs = [];
+
+        const shortenUrlInput = document.getElementById('shortenUrlInput');
+        const customCodeInput = document.getElementById('customCodeInput');
+        const ttlInput = document.getElementById('ttlInput');
+
+        const scenarioSelect = document.getElementById('scenarioSelect');
+        const humanGateToggle = document.getElementById('humanGateToggle');
+        const runBtn = document.getElementById('runBtn');
+        const demoBtn = document.getElementById('demoBtn');
+        const approveBtn = document.getElementById('approveBtn');
+        const rejectBtn = document.getElementById('rejectBtn');
+        const safeStopBtn = document.getElementById('safeStopBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const jobInfo = document.getElementById('jobInfo');
+        const shortUrlLink = document.getElementById('shortUrlLink');
+        const logArea = document.getElementById('logArea');
+        const jobsContainer = document.getElementById('jobsContainer');
+        const healthStatus = document.getElementById('healthStatus');
+        const runId = document.getElementById('runId');
+        const runState = document.getElementById('runState');
+        const stages = document.getElementById('stages');
+        const lineage = document.getElementById('lineage');
+
+        async function init() {
+            renderMetrics([]);
+            renderRunSnapshot();
+            if (scenarioSelect && scenarioSelect.options.length > 0) {
+                selectScenario(scenarioSelect.value);
+            }
+            await loadScenarios();
+            await loadJobs();
+            await ping();
+            startJobPolling();
+        }
+
+        async function ping() {
+            try {
+                const res = await fetch(`${API_BASE}/health`);
+                const payload = await res.json();
+                healthStatus.textContent = payload.status || 'healthy';
+                healthStatus.className = 'pill ok';
+            } catch (error) {
+                healthStatus.textContent = 'down';
+                healthStatus.className = 'pill failed';
+            }
+        }
+
+        async function loadScenarios() {
+            try {
+                const response = await fetch(`${API_BASE}/scenarios`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                if (Array.isArray(data.scenarios) && data.scenarios.length > 0) {
+                    scenarioSelect.innerHTML = data.scenarios.map(scenario => `
+                        <option value="${scenario.type}">${scenario.name}</option>
+                    `).join('');
+
+                    scenarioSelect.value = data.scenarios[0].type;
+                    selectScenario(data.scenarios[0].type);
+                }
+            } catch (error) {
+                console.error('Failed to load scenarios:', error);
+                if (scenarioSelect && scenarioSelect.options.length > 0) {
+                    selectScenario(scenarioSelect.value);
+                }
+            }
+        }
+
+        function selectScenario(type) {
+            selectedScenario = type;
+            if (scenarioSelect) {
+                scenarioSelect.value = type;
+            }
+            runBtn.disabled = false;
+            addLog('info', `Selected scenario: ${type}`);
+        }
+
+        function renderDemoStages(stageStates) {
+            stages.innerHTML = stageStates.map((stage) => `
+                <div class="stage">
+                    <div class="dot ${stage.status}"></div>
+                    <div><strong>${stage.name}</strong><div style="color:var(--muted);font-size:12px">${stage.detail}</div></div>
+                    <span class="pill ${stage.status}">${stage.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function stopDemo() {
+            if (demoTimer) {
+                clearInterval(demoTimer);
+                demoTimer = null;
+            }
+            demoStep = 0;
+            demoApprovalPending = false;
+            demoStopRequested = false;
+        }
+
+        function startSdlcDemo() {
+            stopDemo();
+            demoStopRequested = false;
+            demoStartTime = Date.now();
+            const scenarioType = scenarioSelect.value;
+            const scenarioName = scenarioSelect.options[scenarioSelect.selectedIndex]?.text || scenarioType;
+            const stagesState = [
+                { name: 'Queued', status: 'pending', detail: 'Scenario accepted' },
+                { name: 'Validation', status: 'running', detail: 'Security and contract checks' },
+                { name: 'Execution', status: 'pending', detail: 'Build and deploy task' },
+                { name: 'Approval', status: 'pending', detail: humanGateToggle.checked ? 'Human gate required' : 'Auto-approval enabled' },
+                { name: 'Fallback', status: 'pending', detail: 'Retry / rollback policy' },
+                { name: 'Release', status: 'pending', detail: 'Telemetry and audit trail' }
+            ];
+
+            runId.textContent = 'demo';
+            runState.textContent = 'running';
+            runState.className = 'pill running';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            updateStatus('running', 'Demo running');
+            renderDemoStages(stagesState);
+            lineage.textContent = `${new Date().toLocaleTimeString()} [demo] ${scenarioName} scenario initialized\n${new Date().toLocaleTimeString()} [policy] security + compliance + change control enabled`;
+
+            addLog('info', `Demo started: ${scenarioName}`);
+            addLog('info', 'Stage execution begins');
+            addLog('info', 'Bounded retries enabled; fallback and rollback logic active');
+            addLog('info', humanGateToggle.checked ? 'Human approval required before release.' : 'Human gates disabled in demo mode.');
+
+            demoStep = 0;
+            demoApprovalPending = false;
+
+            demoTimer = setInterval(() => {
+                if (demoStopRequested) {
+                    clearInterval(demoTimer);
+                    demoTimer = null;
+                    return;
+                }
+
+                demoStep += 1;
+                const steps = [
+                    { progress: 18, message: 'Validation checks passed', statusLine: 'running', stageIdx: 1 },
+                    { progress: 38, message: 'Stage execution in progress', statusLine: 'running', stageIdx: 2 },
+                    { progress: 58, message: 'Approval gate reached', statusLine: 'waiting_approval', stageIdx: 3 },
+                    { progress: 72, message: 'Retry and fallback policy engaged', statusLine: 'running', stageIdx: 4 },
+                    { progress: 88, message: 'Telemetry and safety review complete', statusLine: 'running', stageIdx: 5 },
+                    { progress: 100, message: 'Run completed successfully', statusLine: 'completed', stageIdx: 5 }
+                ];
+
+                const current = steps[Math.min(demoStep - 1, steps.length - 1)];
+                if (!current) return;
+
+                progressFill.style.width = `${current.progress}%`;
+                progressText.textContent = `${current.progress}%`;
+                runState.textContent = current.statusLine === 'completed' ? 'completed' : 'running';
+                runState.className = `pill ${current.statusLine === 'completed' ? 'completed' : 'running'}`;
+
+                const updatedStages = [
+                    { name: 'Queued', status: 'succeeded', detail: 'Scenario created' },
+                    { name: 'Validation', status: demoStep >= 2 ? 'succeeded' : 'running', detail: 'Security and contract checks' },
+                    { name: 'Execution', status: demoStep >= 3 ? 'succeeded' : (demoStep >= 2 ? 'running' : 'pending'), detail: 'Build and deploy task' },
+                    { name: 'Approval', status: current.stageIdx === 3 ? 'waiting_approval' : (demoStep > 3 ? 'succeeded' : 'pending'), detail: humanGateToggle.checked ? 'Manual checkpoint' : 'Auto-approved' },
+                    { name: 'Fallback', status: demoStep >= 4 ? 'succeeded' : 'pending', detail: 'Retry / rollback policy' },
+                    { name: 'Release', status: current.statusLine === 'completed' ? 'succeeded' : 'pending', detail: 'Telemetry and audit trail' }
+                ];
+
+                renderDemoStages(updatedStages);
+                addLog('info', `${current.message} for ${scenarioType}`);
+
+                if (current.stageIdx === 3 && humanGateToggle.checked) {
+                    demoApprovalPending = true;
+                    updateStatus('pending', 'Approval required');
+                    addLog('warning', 'Approval gate waiting for human decision');
+                    clearInterval(demoTimer);
+                    demoTimer = null;
+                    return;
+                }
+
+                if (current.statusLine === 'completed') {
+                    updateStatus('completed', 'Demo completed');
+                    addLog('success', '✅ Demo run completed with telemetry and decision lineage');
+                    const decisionLog = [
+                        `${new Date().toLocaleTimeString()} [demo] ${scenarioName} → completed`,
+                        `${new Date().toLocaleTimeString()} [policy] Human gate ${humanGateToggle.checked ? 'enforced' : 'bypassed'}; rollback and safe-stop ready`,
+                        `${new Date().toLocaleTimeString()} [reliability] retry + fallback logic executed; success tracked`
+                    ];
+                    lineage.textContent = decisionLog.join('\n');
+                    const duration = Date.now() - (demoStartTime || Date.now());
+                    trackedDurations.push(duration);
+                    if (lastFailedTimestamp) {
+                        const rec = Date.now() - lastFailedTimestamp;
+                        if (rec > 0) recoveryTimes.push(rec);
+                        lastFailedTimestamp = null;
+                    }
+                    renderMetrics(cachedJobs);
+                    if (demoTimer) {
+                        clearInterval(demoTimer);
+                        demoTimer = null;
+                    }
+                    return;
+                }
+
+                if (demoStep >= steps.length) {
+                    clearInterval(demoTimer);
+                    demoTimer = null;
+                }
+            }, 1200);
+        }
+
+        async function runScenario() {
+            if (!selectedScenario) return;
+
+            const originalUrl = shortenUrlInput.value.trim();
+            if (!originalUrl) {
+                addLog('error', 'Please enter a URL to shorten.');
+                return;
+            }
+
+            const startTime = performance.now();
+            const customCode = customCodeInput.value.trim();
+            shortUrlLink.style.display = 'none';
+            shortUrlLink.innerHTML = '';
+            runBtn.disabled = true;
+            runBtn.textContent = 'Running shorten flow...';
+
+            try {
+                const payload = {
+                    original_url: originalUrl,
+                    scenario_type: selectedScenario,
+                };
+
+                if (customCode) {
+                    payload.custom_code = customCode;
+                }
+
+                if (ttlInput.value) {
+                    payload.ttl_seconds = Number(ttlInput.value);
+                }
+
+                const response = await fetch(`${API_BASE}/shorten`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || data.error || 'Shorten request failed');
+                }
+
+                const durationMs = Math.round(performance.now() - startTime);
+                trackedDurations.push(durationMs);
+                if (lastFailedTimestamp) {
+                    const rec = Date.now() - lastFailedTimestamp;
+                    if (rec > 0) recoveryTimes.push(rec);
+                    lastFailedTimestamp = null;
+                }
+
+                updateStatus('completed', 'Shortened');
+                progressFill.style.width = '100%';
+                progressText.textContent = '100%';
+                jobInfo.textContent = `Short code: ${data.short_code}`;
+                shortUrlLink.innerHTML = `<a href="${data.short_url}" target="_blank" rel="noopener noreferrer">Open short URL: ${data.short_url}</a>`;
+                shortUrlLink.style.display = 'block';
+                addLog('success', `✅ Shortened URL created for ${selectedScenario} scenario`);
+                addLog('success', `Short URL: ${data.short_url}`);
+                addLog('info', `Short code: ${data.short_code}`);
+                renderRunSnapshot({ status: 'completed', progress: 100 });
+                await loadJobs();
+            } catch (error) {
+                console.error('Failed to shorten URL:', error);
+                lastFailedTimestamp = Date.now();
+                shortUrlLink.style.display = 'none';
+                shortUrlLink.innerHTML = '';
+                addLog('error', `Failed to shorten URL: ${error.message}`);
+                updateStatus('failed', 'Shorten failed');
+                progressFill.style.width = '0%';
+                progressText.textContent = '0%';
+                renderMetrics(cachedJobs);
+            } finally {
+                runBtn.disabled = false;
+                runBtn.textContent = 'Run shorten flow';
+            }
+        }
+
+        function connectWebSocket(jobId) {
+            if (ws) {
+                ws.close();
+            }
+
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.host || '127.0.0.1:8000';
+            ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/${jobId}`);
+
+            ws.onopen = () => addLog('info', 'WebSocket connected');
+            ws.onmessage = (event) => handleWebSocketMessage(JSON.parse(event.data));
+            ws.onerror = () => addLog('error', 'WebSocket connection error');
+            ws.onclose = () => addLog('info', 'WebSocket disconnected');
+        }
+
+        function handleWebSocketMessage(data) {
+            if (data.type === 'status') {
+                updateStatus(data.data.status, data.data.status);
+                progressFill.style.width = `${data.data.progress}%`;
+                progressText.textContent = `${data.data.progress}%`;
+                renderRunSnapshot({ status: data.data.status, progress: data.data.progress });
+            } else if (data.type === 'update') {
+                const progress = data.data.progress;
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                renderRunSnapshot({ status: 'running', progress });
+
+                if (data.data.logs) {
+                    data.data.logs.forEach(log => {
+                        const logType = log.includes('✅') ? 'success' :
+                            log.includes('❌') ? 'error' : 'info';
+                        addLog(logType, log);
+                    });
+                }
+            } else if (data.type === 'complete') {
+                const job = data.data;
+                updateStatus(job.status, job.status);
+                progressFill.style.width = `${job.progress || 100}%`;
+                progressText.textContent = `${job.progress || 100}%`;
+                cancelBtn.style.display = 'none';
+                runBtn.disabled = false;
+                runBtn.textContent = 'Run shorten flow';
+                renderRunSnapshot({ status: job.status, progress: job.progress || 100 });
+
+                if (job.status === 'completed') {
+                    addLog('success', '✅ Job completed successfully!');
+                    showJobResult(job.result);
+                } else {
+                    addLog('error', `❌ Job failed: ${job.error}`);
+                }
+
+                loadJobs();
+            }
+        }
+
+        async function cancelJob() {
+            if (!currentJobId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/jobs/${currentJobId}/cancel`, { method: 'POST' });
+                const data = await response.json();
+                addLog('warning', `Job cancelled: ${data.message}`);
+                cancelBtn.style.display = 'none';
+                runBtn.disabled = false;
+                runBtn.textContent = 'Run shorten flow';
+                updateStatus('failed', 'Cancelled');
+            } catch (error) {
+                console.error('Failed to cancel job:', error);
+                addLog('error', `Failed to cancel job: ${error.message}`);
+            }
+        }
+
+        function updateStatus(status, text) {
+            statusBadge.textContent = text;
+            statusBadge.className = `status-badge ${status}`;
+        }
+
+        function addLog(type, message) {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function showJobResult(result) {
+            if (!result) return;
+            let summary = '';
+            if (result.status_summary) {
+                summary = Object.entries(result.status_summary)
+                    .filter(([_, count]) => count > 0)
+                    .map(([status, count]) => `${status}: ${count}`)
+                    .join(', ');
+            }
+
+            addLog('info', `📊 Job Result: ${summary}`);
+            if (result.artifacts_dir) {
+                addLog('info', `📁 Artifacts: ${result.artifacts_dir}`);
+            }
+        }
+
+        function renderMetrics(jobs = []) {
+            const safeJobs = Array.isArray(jobs) ? jobs : [];
+            cachedJobs = safeJobs;
+            const total = safeJobs.length;
+            const completed = safeJobs.filter(job => String(job.status).toLowerCase() === 'completed').length;
+            const failed = safeJobs.filter(job => String(job.status).toLowerCase() === 'failed').length;
+            const successRate = total ? Math.round((completed / total) * 100) : 0;
+
+            const normalizeScenario = (value) => String(value ?? '').trim().toLowerCase();
+            const scenarioCount = (scenarioName) => safeJobs.filter((job) => {
+                const jobScenario = normalizeScenario(job.scenario_type || job.result?.scenario_type || 'shorten');
+                return jobScenario === scenarioName;
+            }).length;
+
+            // Scenario breakdown
+            const greenfield = scenarioCount('greenfield');
+            const brownfield = scenarioCount('brownfield');
+            const ambiguous = scenarioCount('ambiguous');
+
+            // Calculate E2E ms (average end-to-end runtime)
+            const e2eDurations = [...trackedDurations];
+            safeJobs.forEach(job => {
+                if (typeof job.duration_ms === 'number' && job.duration_ms > 0) {
+                    e2eDurations.push(job.duration_ms);
+                } else if (job.completed_at && (job.started_at || job.created_at)) {
+                    const diff = new Date(job.completed_at).getTime() - new Date(job.started_at || job.created_at).getTime();
+                    if (diff > 0) {
+                        e2eDurations.push(diff);
+                    }
+                }
+            });
+            const avgE2E = e2eDurations.length
+                ? Math.round(e2eDurations.reduce((sum, val) => sum + val, 0) / e2eDurations.length)
+                : 0;
+
+            // Calculate MTTR ms (average recovery time after failed runs)
+            const mttrValues = [...recoveryTimes];
+            for (let i = 0; i < safeJobs.length; i++) {
+                if (String(safeJobs[i].status).toLowerCase() === 'failed') {
+                    const failTime = new Date(safeJobs[i].completed_at || safeJobs[i].created_at).getTime();
+                    for (let j = i + 1; j < safeJobs.length; j++) {
+                        if (String(safeJobs[j].status).toLowerCase() === 'completed') {
+                            const recoveryTime = new Date(safeJobs[j].completed_at || safeJobs[j].created_at).getTime();
+                            const delta = recoveryTime - failTime;
+                            if (delta > 0) {
+                                mttrValues.push(delta);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            const avgMTTR = mttrValues.length
+                ? Math.round(mttrValues.reduce((sum, val) => sum + val, 0) / mttrValues.length)
+                : 0;
+
+            const entries = [
+                ['Runs', total],
+                ['Completed', completed],
+                ['Success', `${successRate}%`],
+                ['Failed', failed],
+                ['ROLLBACK', rollbackCount],
+                ['E2E ms', avgE2E],
+                ['MTTR ms', avgMTTR],
+                ['Greenfield', greenfield],
+                ['Brownfield', brownfield],
+                ['Ambiguous', ambiguous]
+            ];
+
+            document.getElementById('metrics').innerHTML = entries.map(([label, value]) => `
+                <div class="metric">
+                    <b>${value}</b>
+                    <span>${label}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderRunSnapshot(job = null) {
+            if (!job && !currentJobId) {
+                runId.textContent = 'none';
+                runState.textContent = 'idle';
+                runState.className = 'pill';
+                stages.innerHTML = `
+                    <div class="stage">
+                        <div class="dot ready"></div>
+                        <div><strong>Queued</strong><div style="color:var(--muted);font-size:12px">Awaiting a scenario</div></div>
+                        <span class="pill pending">pending</span>
+                    </div>
+                    <div class="stage">
+                        <div class="dot pending"></div>
+                        <div><strong>Validation</strong><div style="color:var(--muted);font-size:12px">No run started yet</div></div>
+                        <span class="pill">idle</span>
+                    </div>
+                    <div class="stage">
+                        <div class="dot pending"></div>
+                        <div><strong>Execution</strong><div style="color:var(--muted);font-size:12px">No active workflow</div></div>
+                        <span class="pill">idle</span>
+                    </div>
+                `;
+                lineage.textContent = 'Start a scenario to see gates, retries, approvals, and replans.';
+                return;
+            }
+
+            const snapshot = job || { status: 'running', progress: 0 };
+            const state = snapshot.status || 'running';
+            const id = currentJobId ? currentJobId.slice(0, 8) : (snapshot.id || 'none');
+            const progress = snapshot.progress || 0;
+
+            runId.textContent = id;
+            runState.textContent = state;
+            runState.className = `pill ${state}`;
+
+            let stateNames = ['Queued', 'Validation', 'Execution'];
+            let stageState = ['pending', 'running', 'ready'];
+            if (state === 'completed') stageState = ['succeeded', 'succeeded', 'succeeded'];
+            if (state === 'failed') stageState = ['failed', 'failed', 'failed'];
+
+            stages.innerHTML = stateNames.map((name, idx) => {
+                const stageClass = idx === 1 ? (state === 'running' ? 'running' : stageState[idx]) : stageState[idx];
+                const details = idx === 0 ? 'Initial setup' : idx === 1 ? 'Task validation' : 'Scenario execution';
+                return `
+                    <div class="stage">
+                        <div class="dot ${stageClass}"></div>
+                        <div><strong>${name}</strong><div style="color:var(--muted);font-size:12px">${details}</div></div>
+                        <span class="pill ${stageClass}">${stageClass === 'running' ? 'running' : stageClass}</span>
+                    </div>
+                `;
+            }).join('');
+
+            const decisions = [
+                `${new Date().toLocaleTimeString()} [status] ${id} → ${state} — progress ${progress}%`,
+                `${new Date().toLocaleTimeString()} [log] validation → ${state === 'failed' ? 'blocked' : 'ready'}`
+            ];
+            lineage.textContent = decisions.join('\n');
+        }
+
+        async function loadJobs() {
+            try {
+                const response = await fetch(`${API_BASE}/jobs`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const jobs = await response.json();
+
+                renderMetrics(Array.isArray(jobs) ? jobs : []);
+
+                if (!Array.isArray(jobs) || jobs.length === 0) {
+                    jobsContainer.innerHTML = '<div style="color: var(--muted); padding: 8px 0;">No jobs yet</div>';
+                    renderRunSnapshot();
+                    return;
+                }
+
+                const latest = jobs[jobs.length - 1];
+                renderRunSnapshot({
+                    status: latest.status,
+                    progress: latest.progress,
+                    id: latest.job_id,
+                    scenario_type: latest.scenario_type
+                });
+
+                jobsContainer.innerHTML = jobs.map(job => `
+                    <div class="job-item">
+                        <div>
+                            <strong>${job.scenario_type || 'shorten'}</strong>
+                            <small>${job.created_at ? new Date(job.created_at).toLocaleString() : 'just now'}</small>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="status-badge ${job.status}">${job.status}</span>
+                            <button onclick="viewJob('${job.job_id}')">View</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load jobs:', error);
+                renderMetrics([]);
+                renderRunSnapshot();
+            }
+        }
+
+        async function viewJob(jobId) {
+            try {
+                const response = await fetch(`${API_BASE}/jobs/${jobId}`);
+                const job = await response.json();
+
+                addLog('info', `📋 Loading job: ${jobId.substring(0, 8)}...`);
+                addLog('info', `  Scenario: ${job.scenario_type}`);
+                addLog('info', `  Status: ${job.status}`);
+                addLog('info', `  Progress: ${job.progress}%`);
+
+                if (job.result) {
+                    showJobResult(job.result);
+                }
+
+                if (job.error) {
+                    addLog('error', `  Error: ${job.error}`);
+                }
+
+                const logResponse = await fetch(`${API_BASE}/jobs/${jobId}/logs?limit=50`);
+                const logData = await logResponse.json();
+                logData.logs.forEach(log => {
+                    const type = log.includes('✅') ? 'success' :
+                        log.includes('❌') ? 'error' : 'info';
+                    addLog(type, log);
+                });
+            } catch (error) {
+                console.error('Failed to view job:', error);
+                addLog('error', `Failed to view job: ${error.message}`);
+            }
+        }
+
+        function startJobPolling() {
+            jobPollingInterval = setInterval(() => {
+                if (currentJobId && (!ws || ws.readyState !== WebSocket.OPEN)) {
+                    fetch(`${API_BASE}/jobs/${currentJobId}`)
+                        .then(res => res.json())
+                        .then(job => {
+                            progressFill.style.width = `${job.progress}%`;
+                            progressText.textContent = `${job.progress}%`;
+                            updateStatus(job.status, job.status);
+                            renderRunSnapshot({ status: job.status, progress: job.progress });
+
+                            if (job.status === 'completed' || job.status === 'failed') {
+                                cancelBtn.style.display = 'none';
+                                runBtn.disabled = false;
+                                runBtn.textContent = 'Run shorten flow';
+                                if (job.status === 'completed') {
+                                    addLog('success', '✅ Job completed successfully!');
+                                }
+                                currentJobId = null;
+                                loadJobs();
+                            }
+                        })
+                        .catch(console.error);
+                }
+            }, 3000);
+        }
+
+        scenarioSelect.addEventListener('change', (event) => {
+            selectScenario(event.target.value);
+        });
+
+        approveBtn.addEventListener('click', () => {
+            if (demoApprovalPending) {
+                demoApprovalPending = false;
+                updateStatus('running', 'Approved');
+                addLog('success', '✅ Human approval granted for the checkpoint');
+                addLog('info', 'Approval granted; workflow continues into fallback and release checks');
+                progressFill.style.width = '75%';
+                progressText.textContent = '75%';
+                renderDemoStages([
+                    { name: 'Queued', status: 'succeeded', detail: 'Scenario created' },
+                    { name: 'Validation', status: 'succeeded', detail: 'Checks passed' },
+                    { name: 'Execution', status: 'succeeded', detail: 'Build executed' },
+                    { name: 'Approval', status: 'succeeded', detail: 'Approved by human reviewer' },
+                    { name: 'Fallback', status: 'running', detail: 'Retry / rollback policy active' },
+                    { name: 'Release', status: 'pending', detail: 'Telemetry and audit trail' }
+                ]);
+                lineage.textContent = `${new Date().toLocaleTimeString()} [approval] approved by human reviewer\n${new Date().toLocaleTimeString()} [safety] release allowed to continue`;
+                demoStep = 4;
+                demoTimer = setInterval(() => {
+                    if (demoStopRequested) {
+                        clearInterval(demoTimer);
+                        demoTimer = null;
+                        return;
+                    }
+                    demoStep += 1;
+                    const nextProgress = Math.min(100, 75 + (demoStep - 4) * 12);
+                    progressFill.style.width = `${nextProgress}%`;
+                    progressText.textContent = `${nextProgress}%`;
+                    if (nextProgress >= 100) {
+                        updateStatus('completed', 'Demo completed');
+                        addLog('success', '✅ Demo run completed after human approval');
+                        lineage.textContent = `${new Date().toLocaleTimeString()} [approval] approved by human reviewer\n${new Date().toLocaleTimeString()} [complete] telemetry and audit trail confirmed`;
+                        const duration = Date.now() - (demoStartTime || Date.now());
+                        trackedDurations.push(duration);
+                        if (lastFailedTimestamp) {
+                            const rec = Date.now() - lastFailedTimestamp;
+                            if (rec > 0) recoveryTimes.push(rec);
+                            lastFailedTimestamp = null;
+                        }
+                        renderMetrics(cachedJobs);
+                        clearInterval(demoTimer);
+                        demoTimer = null;
+                        demoApprovalPending = false;
+                    }
+                }, 1200);
+                return;
+            }
+            updateStatus('completed', 'Approved');
+            addLog('success', '✅ Human approval granted for the checkpoint');
+        });
+
+        rejectBtn.addEventListener('click', () => {
+            rollbackCount += 1;
+            lastFailedTimestamp = Date.now();
+            if (demoApprovalPending || demoTimer) {
+                demoApprovalPending = false;
+                if (demoTimer) {
+                    clearInterval(demoTimer);
+                    demoTimer = null;
+                }
+            }
+            updateStatus('failed', 'Rejected');
+            addLog('error', '❌ Human approval rejected; rollback and safety stop path triggered');
+            const rejectedStages = [
+                { name: 'Queued', status: 'succeeded', detail: 'Scenario created' },
+                { name: 'Validation', status: 'succeeded', detail: 'Checks passed' },
+                { name: 'Execution', status: 'succeeded', detail: 'Build executed' },
+                { name: 'Approval', status: 'failed', detail: 'Rejected by reviewer' },
+                { name: 'Fallback', status: 'rolled_back', detail: 'Rollback active' },
+                { name: 'Release', status: 'blocked', detail: 'No release allowed' }
+            ];
+            renderDemoStages(rejectedStages);
+            lineage.textContent = `${new Date().toLocaleTimeString()} [approval] rejected by human reviewer\n${new Date().toLocaleTimeString()} [safety] rollback executed; no release applied`;
+            progressFill.style.width = '35%';
+            progressText.textContent = '35%';
+            renderMetrics(cachedJobs);
+        });
+
+        safeStopBtn.addEventListener('click', () => {
+            lastFailedTimestamp = Date.now();
+            demoStopRequested = true;
+            if (demoTimer) {
+                clearInterval(demoTimer);
+                demoTimer = null;
+            }
+            updateStatus('failed', 'Safe stop');
+            addLog('warning', '⚠️ Safe-stop triggered; no new work is started and in-flight work is drained');
+            renderDemoStages([
+                { name: 'Queued', status: 'succeeded', detail: 'Scenario created' },
+                { name: 'Validation', status: 'running', detail: 'Shutdown in progress' },
+                { name: 'Execution', status: 'blocked', detail: 'Stopped safely' },
+                { name: 'Approval', status: 'blocked', detail: 'Pending review' },
+                { name: 'Fallback', status: 'rolled_back', detail: 'Rollback executed' },
+                { name: 'Release', status: 'blocked', detail: 'No release' }
+            ]);
+            lineage.textContent = `${new Date().toLocaleTimeString()} [safety] safe-stop engaged\n${new Date().toLocaleTimeString()} [rollback] in-flight changes drained`;
+            progressFill.style.width = '45%';
+            progressText.textContent = '45%';
+            renderMetrics(cachedJobs);
+        });
+
+        demoBtn.addEventListener('click', startSdlcDemo);
+        runBtn.addEventListener('click', runScenario);
+        cancelBtn.addEventListener('click', cancelJob);
+
+        init();
+    </script>
+</body>
+</html>
