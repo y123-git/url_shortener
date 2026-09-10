@@ -12,7 +12,7 @@ from app.crud import URLCRUD
 from app.schemas import ShortenRequest, ShortenResponse
 from app.utils.shortener import URLShortener
 from app.utils.cache import cache
-from app.utils.validators import validate_custom_code, is_blocked_domain
+from app.utils.validators import validate_custom_code, validate_url, is_blocked_domain
 from app.config import settings
 from app.jobs import add_job, add_log
 
@@ -35,7 +35,10 @@ async def shorten_url(
     logger.info(f"Shortening URL: {req.original_url}")
     
     # Validate URL
-    if is_blocked_domain(str(req.original_url)):
+    original_url = str(req.original_url)
+    if not validate_url(original_url):
+        raise HTTPException(400, "Invalid URL")
+    if is_blocked_domain(original_url):
         raise HTTPException(400, "Domain is blocked")
     
     # Handle custom code
@@ -46,7 +49,7 @@ async def shorten_url(
             raise HTTPException(400, f"Custom code '{req.custom_code}' already taken")
         short_code = req.custom_code
     else:
-        short_code = URLShortener.generate_unique_code(db, str(req.original_url))
+        short_code = URLShortener.generate_unique_code(db, original_url)
     
     # Calculate expiration
     expires_at = None
@@ -56,13 +59,13 @@ async def shorten_url(
     # Save to database
     url_entry = URLCRUD.create(
         db=db,
-        original_url=str(req.original_url),
+        original_url=original_url,
         code=short_code,
         expires_at=expires_at
     )
     
     # Cache in Redis
-    cache.set(short_code, str(req.original_url))
+    cache.set(short_code, original_url)
 
     # Track a job for browser metrics and recent activity.
     # Use the scenario_type from request, default to "shorten" if not provided.

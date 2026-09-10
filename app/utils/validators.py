@@ -7,11 +7,15 @@ from urllib.parse import urlparse
 from typing import Optional
 
 def validate_url(url: str) -> bool:
-    """Validate URL format."""
+    """Validate an HTTP(S) URL with a hostname."""
     try:
         result = urlparse(url)
-        return all([result.scheme, result.netloc])
-    except:
+        return (
+            result.scheme in {"http", "https"}
+            and bool(result.hostname)
+            and "." in result.hostname
+        )
+    except (TypeError, ValueError):
         return False
 
 def normalize_url(url: str) -> str:

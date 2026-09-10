@@ -43,6 +43,26 @@ def test_invalid_custom_code():
     )
     assert response.status_code == 400
 
+def test_invalid_url_is_not_shortened():
+    """Reject malformed URLs before a short code can be reserved."""
+    response = client.post(
+        "/shorten",
+        json={
+            "original_url": "https://invalid",
+            "custom_code": "invalidurl"
+        }
+    )
+    assert response.status_code == 400
+
+    response = client.post(
+        "/shorten",
+        json={
+            "original_url": "https://example.com",
+            "custom_code": "invalidurl"
+        }
+    )
+    assert response.status_code == 200
+
 def test_ttl():
     """Test TTL."""
     response = client.post(
